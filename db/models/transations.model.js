@@ -23,15 +23,14 @@ const transactionSchema = new Schema({
         enum: ['deposite', 'withdraw']
     },
     balance: Number,
-
-    transactions: [{
-        date: { type: Date, required: true },
-        amount: { type: Number,required: true },
-        transactionType: { type: String },
-        balance: { type: Number, required: true },
-    }]
-,
-    date: Date
+    date: Date,
+//     transactions: [{
+//         date: { type: Date, required: true },
+//         amount: { type: Number,required: true },
+//         transactionType: { type: String },
+//         balance: { type: Number, required: true },
+//     }]
+// ,
 },
     {
         timestamps: true,

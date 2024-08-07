@@ -2,6 +2,8 @@
 
 import transactionsModel from '../../../db/models/transations.model.js';
 import accountsModel from '../../../db/models/accounts.model.js';
+import historyModel from '../../../db/models/history.model.js';
+
 
 
 
@@ -9,28 +11,31 @@ import AppError from "../../../utils/AppError.js";
 import { asyncHandling } from "../../../utils/errorHandling.js";
 
 
-// //========================Start create Account ===============================================================
+// ======================== Start create Account ===============================================================
 export const deposite = asyncHandling(async (req, res, next) => {
     const { amount, accountId, transactionType } = req.body;
-    let balance = 0
-    const accountExist = await accountsModel.findOne({ _id: accountId })
 
-    if (!accountExist) return next(new AppError('You are not Authentaicated', '400'))
+    // Validate input
+    if (!amount || !accountId || !transactionType) {
+        return next(new AppError('All fields are required', '400'));
+    }
 
-    const lastTrans = await transactionsModel.findById(accountId)
-    console.log(lastTrans)
+    // Check if the account exists
+    const accountExist = await accountsModel.findById(accountId);
+    if (!accountExist) {
+        return next(new AppError('Account not found', '400'));
+    }
+
+    // Get the last transaction for the account
+    const lastTrans = await transactionsModel.findOne({ accountId }).sort({ createdAt: -1 });
+
+    // Calculate the new balance
+    let balance;
     if (!lastTrans) {
-
-        balance = accountExist.intialAmount + amount
-
+        balance = accountExist.intialAmount + amount;
+    } else {
+        balance = lastTrans.balance + amount;
     }
-    else {
-        balance = lastTrans.amount + amount
-
-    }
-
-
-
 
     const transaction = await transactionsModel.create({
         accountId,
@@ -39,46 +44,50 @@ export const deposite = asyncHandling(async (req, res, next) => {
         balance,
         transactionType,
         date: Date.now(),
-
-        transactions: [{
-
-            date: Date.now(),
-            amount,
-            transactionType,
-            balance,
-        }]
-
     })
+
     accountExist.balance = balance
     await accountExist.save()
 
+    await historyModel.create({
+        date: Date.now(),
+        amount,
+        transactionType,
+        balance,
+        user: req.user._id,
+        accountId,
+        transactionId: transaction._id
 
-    res.status(201).json({ msg: "Account created Successfully", transaction });
+    });
+    res.status(201).json({ msg: "Transaction created successfully", transaction });
 });
 
 
+// ======================== Start create Account ===============================================================
+export const withdraw = asyncHandling(async (req, res, next) => {
+    const { amount, accountId, transactionType } = req.body;
 
+    // Validate input
+    if (!amount || !accountId || !transactionType) {
+        return next(new AppError('All fields are required', '400'));
+    }
 
-export const widthdraw = asyncHandling(async (req, res, next) => {
-    const { amount, accountId, transactionType } = req.body; 
-    let balance = 0
-    const accountExist = await accountsModel.findOne({ _id: accountId })
+    // Check if the account exists
+    const accountExist = await accountsModel.findById(accountId);
+    if (!accountExist) {
+        return next(new AppError('Account not found', '400'));
+    }
 
-    if (!accountExist) return next(new AppError('You are not Authentaicated', '400'))
+    // Get the last transaction for the account
+    const lastTrans = await transactionsModel.findOne({ accountId }).sort({ createdAt: -1 });
 
-
-    const lastTrans = await transactionsModel.findById(accountId)
+    // Calculate the new balance
+    let balance;
     if (!lastTrans) {
-
-
-        balance = accountExist.intialAmount - amount
-
+        balance = accountExist.intialAmount - amount;
+    } else {
+        balance = lastTrans.balance - amount;
     }
-    else {
-        balance = lastTrans.amount - amount
-
-    }
-
 
     const transaction = await transactionsModel.create({
         accountId,
@@ -86,34 +95,32 @@ export const widthdraw = asyncHandling(async (req, res, next) => {
         amount,
         balance,
         transactionType,
-        date:  Date.now(),
-
-        transactions: [{
-
-            date:  Date.now(),
-            amount,
-            transactionType,
-            balance,
-        }]
-
+        date: Date.now(),
     })
 
     accountExist.balance = balance
     await accountExist.save()
 
+    await historyModel.create({
+        date: Date.now(),
+        amount,
+        transactionType,
+        balance,
+        user: req.user._id,
+        accountId,
+        transactionId:transaction._id
 
-
-
-    res.status(201).json({ msg: "Transation created Successfully" ,transaction});
+    });
+    res.status(201).json({ msg: "Transaction created successfully", transaction });
 });
-
 
 
 // //========================End create Account ===============================================================
 
 
 export const balance = asyncHandling(async (req, res, next) => {
-    const account = await accountsModel.findOne({ _id: req.user._id, _id: req.params })
+    const { id } = req.params
+    const account = await accountsModel.findOne({ user: req.user._id, _id: id })
 
     if (!account) return next(new AppError('You are not Authentaicated', '404'))
 
@@ -126,12 +133,18 @@ export const balance = asyncHandling(async (req, res, next) => {
 })
 
 export const transactions = asyncHandling(async (req, res, next) => {
-    const transaction = await transactionsModel.findOne({ _id: req.user._id, _id: req.params })
+    const { id } = req.params
+
+    const transaction = await transactionsModel.find({ user: req.user._id }, { _id: 0 })
+        .populate({
+            path: 'user',  // The field in transactionsModel that references the User model
+            select: 'fullname  BOD createdAt email mobileNumber -_id'  // Optionally, you can choose which fields to include/exclude from the populated document
+        });
     if (!transaction) return next(new AppError('You are not Authentaicated or have no account yet', '404'))
 
 
 
-    res.status(201).json({ msg: "Account created Successfully", history: transaction.history });
+    res.status(201).json({ msg: "Account created Successfully", transaction });
 
 
 

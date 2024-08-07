@@ -19,15 +19,16 @@ route.post('/deposite',
     auth([systemRoles.user]),
     TC.deposite)
 
-    
+
 route.post('/withdraw',
     auth([systemRoles.user]),
-    TC.widthdraw)
-route.post('/balance/:id',
+    TC.withdraw)
+
+route.get('/balance/:id',
     auth([systemRoles.user]),
     TC.balance)
 
-route.post('/transactions/:id',
+route.get('/transactions',
     // validation(OV.createOrder),
     auth([systemRoles.user]),
     TC.transactions)

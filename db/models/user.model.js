@@ -91,10 +91,7 @@ const userSchema = new Schema({
         enum: Object.values(systemRoles),
         default: 'user'
     },
-    confirmed: {
-        type: Boolean,
-        default: false
-    },
+   
     loggedIn: {
         type: Boolean,
         default: false

@@ -39,10 +39,10 @@ export const login = asyncHandling(async (req, res, next) => {
     const { email, password } = req.body;
 
     // Find user by email and confirmed account
-    const user = await userModel.findOne({ email, confirmed: true });
+    const user = await userModel.findOne({ email });
 
     // Check if user exists
-    if (!user) return next(new AppError('User not found or account is not confirmed yet', 400));
+    if (!user) return next(new AppError('User not found ', 400));
 
     // Validate password
     const isPasswordValid = await bcrypt.compare(password, user.password);

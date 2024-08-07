@@ -18,6 +18,10 @@ const accountSchema = new Schema({
         required: [true, 'AmIntial amount must be enter']
     },
 
+    balance: {
+        type: Number,
+        required: [true, 'AmIntial amount must be enter']
+    },
 },
     {
         timestamps: true,

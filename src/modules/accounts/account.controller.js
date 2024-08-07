@@ -18,7 +18,7 @@ export const createAccount = asyncHandling(async (req, res, next) => {
     if (!userExist) return next(new AppError('You are not Authentaicated', '400'))
     // let name = `${userExist.lastname} ${userExist.lastname}`
     const account = await accountsModel.create({
-        user: req.user._id, intialAmount,
+        user: req.user._id, intialAmount,balance:intialAmount
     })
 
 

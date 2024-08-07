@@ -16,15 +16,14 @@ import systemRoles from "../../../utils/systemRoles.js";
 const route = Router()
 
 route.post('/deposite',
-    // validation(OV.createOrder),
     auth([systemRoles.user]),
     TC.deposite)
+
+    
 route.post('/withdraw',
-    // validation(OV.createOrder),
     auth([systemRoles.user]),
     TC.widthdraw)
 route.post('/balance/:id',
-    // validation(OV.createOrder),
     auth([systemRoles.user]),
     TC.balance)
 
